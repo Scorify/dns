@@ -1,3 +1,3 @@
-module github.com/scorify/check-template
+module github.com/scorify/dns
 
 go 1.21.6
