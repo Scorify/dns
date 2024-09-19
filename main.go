@@ -9,7 +9,7 @@ import (
 )
 
 type Schema struct {
-	Target         string `json:"target"`
+	Server         string `json:"dns_server"`
 	Port           int    `json:"port"`
 	Record         string `json:"record"`
 	Domain         string `json:"domain"`
