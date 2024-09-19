@@ -24,10 +24,13 @@ func Run(ctx context.Context, config string) error {
 		return err
 	}
 
-	connStr := fmt.Sprintf("%s:%d", schema.Target, schema.Port)
+	connStr := fmt.Sprintf("%s:%d", schema.Server, schema.Port)
+
+	r := new(net.Resolver)
+	r.Dial = func(ctx context.Context, network, address string) (net.Conn, error) {
 	deadline, ok := ctx.Deadline()
 	if !ok {
-		return fmt.Errorf("deadline not set")
+			return nil, fmt.Errorf("deadline not set")
 	}
 
 	r := &net.Resolver{
@@ -36,8 +39,8 @@ func Run(ctx context.Context, config string) error {
 			d := net.Dialer{
 				Deadline: deadline,
 			}
-			return d.DialContext(ctx, "udp", connStr)
-		},
+
+		return d.DialContext(ctx, network, connStr)
 	}
 
 	var addresses []string
