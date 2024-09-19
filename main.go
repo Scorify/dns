@@ -9,7 +9,7 @@ import (
 )
 
 type Schema struct {
-	Target         string `json:"target"`
+	Server         string `json:"dns_server"`
 	Port           int    `json:"port"`
 	Record         string `json:"record"`
 	Domain         string `json:"domain"`
@@ -24,42 +24,42 @@ func Run(ctx context.Context, config string) error {
 		return err
 	}
 
-	connStr := fmt.Sprintf("%s:%d", schema.Target, schema.Port)
-	deadline, ok := ctx.Deadline()
-	if !ok {
-		return fmt.Errorf("deadline not set")
-	}
+	connStr := fmt.Sprintf("%s:%d", schema.Server, schema.Port)
 
-	r := &net.Resolver{
-		PreferGo: true,
-		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
-			d := net.Dialer{
-				Deadline: deadline,
-			}
-			return d.DialContext(ctx, "udp", connStr)
-		},
+	r := new(net.Resolver)
+	r.Dial = func(ctx context.Context, network, address string) (net.Conn, error) {
+		deadline, ok := ctx.Deadline()
+		if !ok {
+			return nil, fmt.Errorf("deadline not set")
+		}
+
+		d := net.Dialer{
+			Deadline: deadline,
+		}
+
+		return d.DialContext(ctx, network, connStr)
 	}
 
 	var addresses []string
 
 	switch schema.Record {
 	case "A":
-		ips, err := r.LookupIP(ctx, "ipv4", schema.Domain)
+		ips, err := r.LookupIP(ctx, "ip4", schema.Domain)
 		if err != nil {
 			return err
 		}
 
-		addresses := make([]string, len(ips))
+		addresses = make([]string, len(ips))
 		for i, ip := range ips {
 			addresses[i] = ip.String()
 		}
 	case "AAAA":
-		ips, err := r.LookupIP(ctx, "ipv6", schema.Domain)
+		ips, err := r.LookupIP(ctx, "ip6", schema.Domain)
 		if err != nil {
 			return err
 		}
 
-		addresses := make([]string, len(ips))
+		addresses = make([]string, len(ips))
 		for i, ip := range ips {
 			addresses[i] = ip.String()
 		}
