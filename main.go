@@ -28,17 +28,14 @@ func Run(ctx context.Context, config string) error {
 
 	r := new(net.Resolver)
 	r.Dial = func(ctx context.Context, network, address string) (net.Conn, error) {
-	deadline, ok := ctx.Deadline()
-	if !ok {
+		deadline, ok := ctx.Deadline()
+		if !ok {
 			return nil, fmt.Errorf("deadline not set")
-	}
+		}
 
-	r := &net.Resolver{
-		PreferGo: true,
-		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
-			d := net.Dialer{
-				Deadline: deadline,
-			}
+		d := net.Dialer{
+			Deadline: deadline,
+		}
 
 		return d.DialContext(ctx, network, connStr)
 	}
@@ -52,7 +49,7 @@ func Run(ctx context.Context, config string) error {
 			return err
 		}
 
-		addresses := make([]string, len(ips))
+		addresses = make([]string, len(ips))
 		for i, ip := range ips {
 			addresses[i] = ip.String()
 		}
@@ -62,7 +59,7 @@ func Run(ctx context.Context, config string) error {
 			return err
 		}
 
-		addresses := make([]string, len(ips))
+		addresses = make([]string, len(ips))
 		for i, ip := range ips {
 			addresses[i] = ip.String()
 		}
