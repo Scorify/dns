@@ -44,7 +44,7 @@ func Run(ctx context.Context, config string) error {
 
 	switch schema.Record {
 	case "A":
-		ips, err := r.LookupIP(ctx, "ipv4", schema.Domain)
+		ips, err := r.LookupIP(ctx, "ip4", schema.Domain)
 		if err != nil {
 			return err
 		}
@@ -54,7 +54,7 @@ func Run(ctx context.Context, config string) error {
 			addresses[i] = ip.String()
 		}
 	case "AAAA":
-		ips, err := r.LookupIP(ctx, "ipv6", schema.Domain)
+		ips, err := r.LookupIP(ctx, "ip6", schema.Domain)
 		if err != nil {
 			return err
 		}
