@@ -2,7 +2,6 @@ package dns
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net"
 	"slices"
@@ -59,14 +58,14 @@ func Validate(config string) error {
 }
 
 func Run(ctx context.Context, config string) error {
-	schema := Schema{}
+	conf := Schema{}
 
-	err := json.Unmarshal([]byte(config), &schema)
+	err := schema.Unmarshal([]byte(config), &conf)
 	if err != nil {
 		return err
 	}
 
-	connStr := fmt.Sprintf("%s:%d", schema.Server, schema.Port)
+	connStr := fmt.Sprintf("%s:%d", conf.Server, conf.Port)
 
 	r := new(net.Resolver)
 	r.Dial = func(ctx context.Context, network, address string) (net.Conn, error) {
@@ -84,9 +83,9 @@ func Run(ctx context.Context, config string) error {
 
 	var addresses []string
 
-	switch schema.Record {
+	switch conf.Record {
 	case "A":
-		ips, err := r.LookupIP(ctx, "ip4", schema.Domain)
+		ips, err := r.LookupIP(ctx, "ip4", conf.Domain)
 		if err != nil {
 			return err
 		}
@@ -96,7 +95,7 @@ func Run(ctx context.Context, config string) error {
 			addresses[i] = ip.String()
 		}
 	case "AAAA":
-		ips, err := r.LookupIP(ctx, "ip6", schema.Domain)
+		ips, err := r.LookupIP(ctx, "ip6", conf.Domain)
 		if err != nil {
 			return err
 		}
@@ -106,14 +105,14 @@ func Run(ctx context.Context, config string) error {
 			addresses[i] = ip.String()
 		}
 	case "CNAME":
-		cname, err := r.LookupCNAME(ctx, schema.Domain)
+		cname, err := r.LookupCNAME(ctx, conf.Domain)
 		if err != nil {
 			return err
 		}
 
 		addresses = []string{cname}
 	case "MX":
-		mxs, err := r.LookupMX(ctx, schema.Domain)
+		mxs, err := r.LookupMX(ctx, conf.Domain)
 		if err != nil {
 			return err
 		}
@@ -123,7 +122,7 @@ func Run(ctx context.Context, config string) error {
 			addresses[i] = mx.Host
 		}
 	case "NS":
-		nss, err := r.LookupNS(ctx, schema.Domain)
+		nss, err := r.LookupNS(ctx, conf.Domain)
 		if err != nil {
 			return err
 		}
@@ -133,7 +132,7 @@ func Run(ctx context.Context, config string) error {
 			addresses[i] = ns.Host
 		}
 	case "PTR":
-		ptrs, err := r.LookupAddr(ctx, schema.Domain)
+		ptrs, err := r.LookupAddr(ctx, conf.Domain)
 		if err != nil {
 			return err
 		}
@@ -141,7 +140,7 @@ func Run(ctx context.Context, config string) error {
 		addresses = make([]string, len(ptrs))
 		copy(addresses, ptrs)
 	case "TXT":
-		txts, err := r.LookupTXT(ctx, schema.Domain)
+		txts, err := r.LookupTXT(ctx, conf.Domain)
 		if err != nil {
 			return err
 		}
@@ -149,14 +148,14 @@ func Run(ctx context.Context, config string) error {
 		addresses = make([]string, len(txts))
 		copy(addresses, txts)
 	default:
-		return fmt.Errorf("unsupported record type: %s", schema.Record)
+		return fmt.Errorf("unsupported record type: %q", conf.Record)
 	}
 
 	for _, address := range addresses {
-		if address == schema.ExpectedOutput {
+		if address == conf.ExpectedOutput {
 			return nil
 		}
 	}
 
-	return fmt.Errorf("expected out %q not found in [%s]", schema.ExpectedOutput, strings.Join(addresses, ", "))
+	return fmt.Errorf("expected out %q not found in [%s]", conf.ExpectedOutput, strings.Join(addresses, ", "))
 }
