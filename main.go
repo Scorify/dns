@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"slices"
 	"strings"
+
+	"github.com/scorify/schema"
 )
 
 type Schema struct {
@@ -14,6 +17,45 @@ type Schema struct {
 	Record         string `key:"record" default:"A" enum:"A,AAAA,CNAME,MX,NS,PTR,TXT"`
 	Domain         string `key:"domain"`
 	ExpectedOutput string `key:"expected_output"`
+}
+
+func Validate(config string) error {
+	conf := Schema{}
+
+	err := schema.Unmarshal([]byte(config), &conf)
+	if err != nil {
+		return err
+	}
+
+	if conf.Server == "" {
+		return fmt.Errorf("server is required; got %q", conf.Server)
+	}
+
+	if conf.Port == 0 {
+		return fmt.Errorf("port is required; got %d", conf.Port)
+	}
+
+	if conf.Port < 1 || conf.Port > 65535 {
+		return fmt.Errorf("port must be between 1 and 65535; got %d", conf.Port)
+	}
+
+	if conf.Record == "" {
+		return fmt.Errorf("record is required; got %q", conf.Record)
+	}
+
+	if !slices.Contains([]string{"A", "AAAA", "CNAME", "MX", "NS", "PTR", "TXT"}, conf.Record) {
+		return fmt.Errorf("record must be one of A, AAAA, CNAME, MX, NS, PTR, TXT; got %q", conf.Record)
+	}
+
+	if conf.Domain == "" {
+		return fmt.Errorf("domain is required; got %q", conf.Domain)
+	}
+
+	if conf.ExpectedOutput == "" {
+		return fmt.Errorf("expected_output is required; got %q", conf.ExpectedOutput)
+	}
+
+	return nil
 }
 
 func Run(ctx context.Context, config string) error {
