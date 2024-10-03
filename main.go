@@ -9,11 +9,11 @@ import (
 )
 
 type Schema struct {
-	Server         string `json:"dns_server"`
-	Port           int    `json:"port"`
-	Record         string `json:"record"`
-	Domain         string `json:"domain"`
-	ExpectedOutput string `json:"expected_output"`
+	Server         string `key:"dns_server"`
+	Port           int    `key:"port" default:"53"`
+	Record         string `key:"record" default:"A" enum:"A,AAAA,CNAME,MX,NS,PTR,TXT"`
+	Domain         string `key:"domain"`
+	ExpectedOutput string `key:"expected_output"`
 }
 
 func Run(ctx context.Context, config string) error {
